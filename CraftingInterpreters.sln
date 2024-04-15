@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34728.123
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpLox", "SharpLox\SharpLox.csproj", "{3526C15A-40A3-4D7B-B667-E328477757EF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestFiles", "TestFiles", "{1F501ECB-1844-4BF5-9429-32F653C3FAE1}"
+	ProjectSection(SolutionItems) = preProject
+		TestFiles\simple.lox = TestFiles\simple.lox
+		TestFiles\simple_tokens.lox = TestFiles\simple_tokens.lox
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{87FA0A84-3C9A-4A7D-81E3-D5EEE3BEF927}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3526C15A-40A3-4D7B-B667-E328477757EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3526C15A-40A3-4D7B-B667-E328477757EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3526C15A-40A3-4D7B-B667-E328477757EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3526C15A-40A3-4D7B-B667-E328477757EF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {87131F42-32D8-4C6B-8727-BC8E6F79391B}
+	EndGlobalSection
+EndGlobal
