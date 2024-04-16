@@ -16,10 +16,12 @@ internal class GenerateAst
 		string outputDir = args[0];
 
 		List<string> typeDefs = [
+			"Assign   : Token name, Expr value",
 			"Binary   : Expr left, Token @operator, Expr right",
 			"Grouping : Expr expression",
 			"Literal  : object? value",
-			"Unary    : Token @operator, Expr right"
+			"Unary    : Token @operator, Expr right",
+			"Variable : Token name"
 		];
 		Dictionary<string, List<TypeDef>> parsedFields = ParseTypeDefs(typeDefs);
 
@@ -27,7 +29,8 @@ internal class GenerateAst
 
 		typeDefs = [
 			"Expression : Expr expres",
-			"Print      : Expr expres"
+			"Print      : Expr expres",
+			"Var        : Token name, Expr? initializer"
 		];
 		parsedFields = ParseTypeDefs(typeDefs);
 		DefineAst(outputDir, "Stmt", parsedFields);
@@ -101,7 +104,6 @@ internal class GenerateAst
 		{
 			writer.WriteLine($"		public {field.Type} {field.Field} {{ get; }} = {field.Param};");
 		}
-		writer.WriteLine();
 
 		// Visitor pattern.
 		writer.WriteLine();

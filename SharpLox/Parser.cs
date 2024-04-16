@@ -1,4 +1,5 @@
-﻿using static SharpLox.TokenType;
+﻿using static SharpLox.Expr;
+using static SharpLox.TokenType;
 
 namespace SharpLox;
 
@@ -6,15 +7,48 @@ internal class Parser(List<Token> tokens)
 {
 	private int current = 0;
 
-	public List<Stmt> Parse()
+	public List<Stmt?> Parse()
 	{
-		List<Stmt> statements = [];
+		List<Stmt?> statements = [];
 		while (!IsAtEnd())
 		{
-			statements.Add(Statement());
+			statements.Add(Declaration());
 		}
 
 		return statements;
+	}
+
+	// declaration    → varDecl
+	//                | statement ;
+	private Stmt? Declaration()
+	{
+		try
+		{
+			if (Match(VAR))
+				return VarDeclaration();
+
+			return Statement();
+		}
+		catch (ParseErrorException)
+		{
+			Synchronize();
+			return null;
+		}
+	}
+
+	// varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
+	private Stmt VarDeclaration()
+	{
+		Token name = Consume(IDENTIFIER, "Expect variable name.");
+
+		Expr? initializer = null;
+		if (Match(EQUAL))
+		{
+			initializer = Expression();
+		}
+
+		Consume(SEMICOLON, "Expect ';' after variable declaration.");
+		return new Stmt.Var(name, initializer);
 	}
 
 	// statement      → exprStmt
@@ -44,10 +78,30 @@ internal class Parser(List<Token> tokens)
 		return new Stmt.Expression(expr);
 	}
 
-	// expression     → equality ;
+	// expression     → assignment ;
 	private Expr Expression()
 	{
-		return Equality();
+		return Assignment();
+	}
+
+	private Expr Assignment()
+	{
+		Expr expr = Equality();
+
+		if (Match(EQUAL))
+		{
+			Token equals = Previous();
+			Expr value = Assignment();
+
+			if (expr is Expr.Variable varia) {
+				Token name = varia.Name;
+				return new Expr.Assign(name, value);
+			}
+
+			Error(equals, "Invalid assignment target.");
+		}
+
+		return expr;
 	}
 
 	// equality       → comparison ( ( "!=" | "==" ) comparison )* ;
@@ -124,8 +178,10 @@ internal class Parser(List<Token> tokens)
 		return Primary();
 	}
 
-	// primary        → NUMBER | STRING | "true" | "false" | "nil"
-	//                | "(" expression ")" ;
+	// primary        → "true" | "false" | "nil"
+	//                | NUMBER | STRING
+	//                | "(" expression ")"
+	//                | IDENTIFIER ;
 	private Expr Primary()
 	{
 		if (Match(FALSE)) return new Expr.Literal(false);
@@ -135,6 +191,11 @@ internal class Parser(List<Token> tokens)
 		if (Match(NUMBER, STRING))
 		{
 			return new Expr.Literal(Previous().Literal);
+		}
+
+		if (Match(IDENTIFIER))
+		{
+			return new Expr.Variable(Previous());
 		}
 
 		if (Match(LEFT_PAREN))

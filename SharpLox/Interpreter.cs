@@ -1,9 +1,12 @@
-﻿using static SharpLox.TokenType;
+﻿using System;
+using static SharpLox.TokenType;
 
 namespace SharpLox;
 
 internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 {
+	private Environment Environment { get; } = new Environment();
+
 	public void Interpret(List<Stmt> statements)
 	{
 		try
@@ -56,6 +59,18 @@ internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 
 		// Unreachable.
 		return null;
+	}
+
+	public object? VisitVariableExpr(Expr.Variable expr)
+	{
+		return Environment.Get(expr.Name);
+	}
+
+	public object? VisitAssignExpr(Expr.Assign expr)
+	{
+		object? value = Evaluate(expr.Value);
+		Environment.Assign(expr.Name, value);
+		return value;
 	}
 
 	public object? VisitBinaryExpr(Expr.Binary expr)
@@ -145,6 +160,18 @@ internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 	{
 		object? value = Evaluate(stmt.Expres);
 		Console.WriteLine(Stringify(value));
+		return null;
+	}
+
+	public object? VisitVarStmt(Stmt.Var stmt)
+	{
+		object? value = null;
+		if (stmt.Initializer != null)
+		{
+			value = Evaluate(stmt.Initializer);
+		}
+
+		Environment.Define(stmt.Name.Lexeme, value);
 		return null;
 	}
 }

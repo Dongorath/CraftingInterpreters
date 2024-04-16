@@ -11,7 +11,7 @@ internal class Lox
 		if (args.Length > 1)
 		{
 			Console.WriteLine("Usage: SharpLox [script]");
-			Environment.Exit(64);
+			System.Environment.Exit(64);
 		}
 		else if (args.Length == 1)
 		{
@@ -30,9 +30,9 @@ internal class Lox
 
 		// Indicate an error in the exit code.
 		if (HadError)
-			Environment.Exit(65);
+			System.Environment.Exit(65);
 		if (HadRuntimeError)
-			Environment.Exit(70);
+			System.Environment.Exit(70);
 	}
 
 	private static void RunPrompt()
@@ -54,7 +54,7 @@ internal class Lox
 		List<Token> tokens = scanner.ScanTokens();
 
 		Parser parser = new Parser(tokens);
-		List<Stmt> statements = parser.Parse();
+		List<Stmt?> statements = parser.Parse();
 
 		// Stop if there was a syntax error.
 		if (HadError)
@@ -88,7 +88,7 @@ internal class Lox
 
 	public static void RuntimeError(RuntimeErrorException error)
 	{
-		Console.WriteLine($"{error.Message}{Environment.NewLine}[line {error.Token.Line}]");
+		Console.WriteLine($"{error.Message}{System.Environment.NewLine}[line {error.Token.Line}]");
 		HadRuntimeError = true;
 	}
 }
