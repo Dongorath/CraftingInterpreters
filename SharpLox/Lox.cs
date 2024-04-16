@@ -2,7 +2,9 @@
 
 internal class Lox
 {
-	static bool HadError { get; set; } = false;
+	private static Interpreter Interpreter { get; } = new Interpreter();
+	private static bool HadError { get; set; } = false;
+	private static bool HadRuntimeError { get; set; } = false;
 
 	public static void Main(string[] args)
 	{
@@ -29,6 +31,8 @@ internal class Lox
 		// Indicate an error in the exit code.
 		if (HadError)
 			Environment.Exit(65);
+		if (HadRuntimeError)
+			Environment.Exit(70);
 	}
 
 	private static void RunPrompt()
@@ -55,8 +59,8 @@ internal class Lox
 		// Stop if there was a syntax error.
 		if (HadError)
 			return;
-
-		Console.WriteLine(new AstPrinter().Print(expression!));
+		// expression cannot be null
+		Interpreter.Interpret(expression!);
 	}
 
 	public static void Error(int line, string message)
@@ -80,5 +84,11 @@ internal class Lox
 		{
 			Report(token.Line, " at '" + token.Lexeme + "'", message);
 		}
+	}
+
+	public static void RuntimeError(RuntimeErrorException error)
+	{
+		Console.WriteLine($"{error.Message}{Environment.NewLine}[line {error.Token.Line}]");
+		HadRuntimeError = true;
 	}
 }
