@@ -6,16 +6,42 @@ internal class Parser(List<Token> tokens)
 {
 	private int current = 0;
 
-	public Expr? Parse()
+	public List<Stmt> Parse()
 	{
-		try
+		List<Stmt> statements = [];
+		while (!IsAtEnd())
 		{
-			return Expression();
+			statements.Add(Statement());
 		}
-		catch (ParseErrorException error)
-		{
-			return null;
-		}
+
+		return statements;
+	}
+
+	// statement      → exprStmt
+	//                | printStmt ;
+	private Stmt Statement()
+	{
+		if (Match(PRINT))
+			return PrintStatement();
+
+		return ExpressionStatement();
+	}
+
+	// printStmt      → "print" expression ";" ;
+	// The "print" has already been consumed by Statement()
+	private Stmt PrintStatement()
+	{
+		Expr value = Expression();
+		Consume(SEMICOLON, "Expect ';' after value.");
+		return new Stmt.Print(value);
+	}
+
+	// exprStmt       → expression ";" ;
+	private Stmt ExpressionStatement()
+	{
+		Expr expr = Expression();
+		Consume(SEMICOLON, "Expect ';' after expression.");
+		return new Stmt.Expression(expr);
 	}
 
 	// expression     → equality ;

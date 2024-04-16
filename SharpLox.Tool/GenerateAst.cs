@@ -21,11 +21,25 @@ internal class GenerateAst
 			"Literal  : object? value",
 			"Unary    : Token @operator, Expr right"
 		];
-		Dictionary<string, List<TypeDef>> parsedFields = typeDefs.Select(f =>
+		Dictionary<string, List<TypeDef>> parsedFields = ParseTypeDefs(typeDefs);
+
+		DefineAst(outputDir, "Expr", parsedFields);
+
+		typeDefs = [
+			"Expression : Expr expres",
+			"Print      : Expr expres"
+		];
+		parsedFields = ParseTypeDefs(typeDefs);
+		DefineAst(outputDir, "Stmt", parsedFields);
+	}
+
+	private static Dictionary<string, List<TypeDef>> ParseTypeDefs(List<string> typeDefs)
+	{
+		return typeDefs.Select(f =>
 		{
 			string[] t = f.Split(':', _noEmptyTrimmed);
 			string typeName = t[0];
-			
+
 			List<TypeDef> fields = t[1].Split(',', _noEmptyTrimmed).Select(fi =>
 			{
 				string[] ft = fi.Split(' ', _noEmptyTrimmed);
@@ -36,8 +50,6 @@ internal class GenerateAst
 
 			return new KeyValuePair<string, List<TypeDef>>(typeName, fields);
 		}).ToDictionary();
-
-		DefineAst(outputDir, "Expr", parsedFields);
 	}
 
 	private static void DefineAst(string outputDir, string baseName, Dictionary<string, List<TypeDef>> types)

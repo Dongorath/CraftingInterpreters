@@ -2,19 +2,26 @@
 
 namespace SharpLox;
 
-internal class Interpreter : Expr.IVisitor<object?>
+internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 {
-	public void Interpret(Expr expression)
+	public void Interpret(List<Stmt> statements)
 	{
 		try
 		{
-			object? value = Evaluate(expression);
-			Console.WriteLine(Stringify(value));
+			foreach (Stmt statement in statements)
+			{
+				Execute(statement);
+			}
 		}
 		catch (RuntimeErrorException error)
 		{
 			Lox.RuntimeError(error);
 		}
+	}
+
+	private void Execute(Stmt stmt)
+	{
+		stmt.Accept(this);
 	}
 
 	private object? Evaluate(Expr expr)
@@ -126,5 +133,18 @@ internal class Interpreter : Expr.IVisitor<object?>
 		if (left is double && right is double) return;
 
 		throw new RuntimeErrorException(@operator, "Operands must be numbers.");
+	}
+
+	public object? VisitExpressionStmt(Stmt.Expression stmt)
+	{
+		Evaluate(stmt.Expres);
+		return null;
+	}
+
+	public object? VisitPrintStmt(Stmt.Print stmt)
+	{
+		object? value = Evaluate(stmt.Expres);
+		Console.WriteLine(Stringify(value));
+		return null;
 	}
 }

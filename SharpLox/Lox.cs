@@ -54,13 +54,13 @@ internal class Lox
 		List<Token> tokens = scanner.ScanTokens();
 
 		Parser parser = new Parser(tokens);
-		Expr? expression = parser.Parse();
+		List<Stmt> statements = parser.Parse();
 
 		// Stop if there was a syntax error.
 		if (HadError)
 			return;
-		// expression cannot be null
-		Interpreter.Interpret(expression!);
+		// statements cannot be null
+		Interpreter.Interpret(statements!);
 	}
 
 	public static void Error(int line, string message)
