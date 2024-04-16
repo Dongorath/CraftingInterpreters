@@ -18,7 +18,7 @@ internal class GenerateAst
 		List<string> typeDefs = [
 			"Binary   : Expr left, Token @operator, Expr right",
 			"Grouping : Expr expression",
-			"Literal  : object value",
+			"Literal  : object? value",
 			"Unary    : Token @operator, Expr right"
 		];
 		Dictionary<string, List<TypeDef>> parsedFields = typeDefs.Select(f =>
