@@ -5,7 +5,7 @@ namespace SharpLox;
 
 internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 {
-	private Environment Environment { get; } = new Environment();
+	private Environment Environment { get; set; } = new Environment();
 
 	public void Interpret(List<Stmt> statements)
 	{
@@ -25,6 +25,24 @@ internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 	private void Execute(Stmt stmt)
 	{
 		stmt.Accept(this);
+	}
+
+	private void ExecuteBlock(List<Stmt> statements,Environment environment)
+	{
+		Environment previous = Environment;
+		try
+		{
+			Environment = environment;
+
+			foreach (Stmt statement in statements)
+			{
+				Execute(statement);
+			}
+		}
+		finally
+		{
+			Environment = previous;
+		}
 	}
 
 	private object? Evaluate(Expr expr)
@@ -160,6 +178,12 @@ internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 	{
 		object? value = Evaluate(stmt.Expres);
 		Console.WriteLine(Stringify(value));
+		return null;
+	}
+
+	public object? VisitBlockStmt(Stmt.Block stmt)
+	{
+		ExecuteBlock(stmt.Statements, new Environment(Environment));
 		return null;
 	}
 

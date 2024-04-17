@@ -28,6 +28,7 @@ internal class GenerateAst
 		DefineAst(outputDir, "Expr", parsedFields);
 
 		typeDefs = [
+			"Block      : List<Stmt> statements",
 			"Expression : Expr expres",
 			"Print      : Expr expres",
 			"Var        : Token name, Expr? initializer"

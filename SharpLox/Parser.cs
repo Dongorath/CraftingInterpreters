@@ -53,10 +53,13 @@ internal class Parser(List<Token> tokens)
 
 	// statement      → exprStmt
 	//                | printStmt ;
+	//                | block ;
 	private Stmt Statement()
 	{
 		if (Match(PRINT))
 			return PrintStatement();
+		if (Match(LEFT_BRACE))
+			return new Stmt.Block(Block());
 
 		return ExpressionStatement();
 	}
@@ -68,6 +71,20 @@ internal class Parser(List<Token> tokens)
 		Expr value = Expression();
 		Consume(SEMICOLON, "Expect ';' after value.");
 		return new Stmt.Print(value);
+	}
+
+	// block          → "{" declaration* "}" ;
+	private List<Stmt> Block()
+	{
+		List<Stmt> statements = new List<Stmt>();
+
+		while (!Check(RIGHT_BRACE) && !IsAtEnd())
+		{
+			statements.Add(Declaration()!);
+		}
+
+		Consume(RIGHT_BRACE, "Expect '}' after block.");
+		return statements;
 	}
 
 	// exprStmt       → expression ";" ;

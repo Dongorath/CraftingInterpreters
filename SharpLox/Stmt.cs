@@ -4,12 +4,23 @@ internal abstract class Stmt
 {
 	public interface IVisitor<T>
 	{
+		T VisitBlockStmt(Block stmt);
 		T VisitExpressionStmt(Expression stmt);
 		T VisitPrintStmt(Print stmt);
 		T VisitVarStmt(Var stmt);
 	}
 
 	public abstract T Accept<T>(IVisitor<T> visitor);
+
+	public class Block(List<Stmt> statements) : Stmt
+	{
+		public List<Stmt> Statements { get; } = statements;
+
+		public override T Accept<T>(IVisitor<T> visitor)
+		{
+			return visitor.VisitBlockStmt(this);
+		}
+	}
 
 	public class Expression(Expr expres) : Stmt
 	{

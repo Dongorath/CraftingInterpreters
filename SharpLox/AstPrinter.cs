@@ -31,12 +31,12 @@ internal class AstPrinter : Expr.IVisitor<string>
 
 	public string VisitVariableExpr(Expr.Variable expr)
 	{
-		throw new NotImplementedException();
+		return expr.Name.Lexeme;
 	}
 
 	public string VisitAssignExpr(Expr.Assign expr)
 	{
-		throw new NotImplementedException();
+		return Parenthesize("= " + expr.Name.Lexeme, expr.Value);
 	}
 
 	private string Parenthesize(string name, params Expr[] exprs)
