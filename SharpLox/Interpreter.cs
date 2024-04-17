@@ -55,6 +55,24 @@ internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 		return expr.Value;
 	}
 
+	public object? VisitLogicalExpr(Expr.Logical expr)
+	{
+		object? left = Evaluate(expr.Left);
+
+		if (expr.Operator.Type == TokenType.OR)
+		{
+			if (IsTruthy(left))
+				return left;
+		}
+		else // AND
+		{
+			if (!IsTruthy(left))
+				return left;
+		}
+
+		return Evaluate(expr.Right);
+	}
+
 	public object? VisitGroupingExpr(Expr.Grouping expr)
 	{
 		return Evaluate(expr.Expression);
@@ -174,10 +192,32 @@ internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 		return null;
 	}
 
+	public object? VisitIfStmt(Stmt.If stmt)
+	{
+		if (IsTruthy(Evaluate(stmt.Condition)))
+		{
+			Execute(stmt.ThenBranch);
+		}
+		else if (stmt.ElseBranch != null)
+		{
+			Execute(stmt.ElseBranch);
+		}
+		return null;
+	}
+
 	public object? VisitPrintStmt(Stmt.Print stmt)
 	{
 		object? value = Evaluate(stmt.Expres);
 		Console.WriteLine(Stringify(value));
+		return null;
+	}
+
+	public object? VisitWhileStmt(Stmt.While stmt)
+	{
+		while (IsTruthy(Evaluate(stmt.Condition)))
+		{
+			Execute(stmt.Body);
+		}
 		return null;
 	}
 

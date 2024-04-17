@@ -6,8 +6,10 @@ internal abstract class Stmt
 	{
 		T VisitBlockStmt(Block stmt);
 		T VisitExpressionStmt(Expression stmt);
+		T VisitIfStmt(If stmt);
 		T VisitPrintStmt(Print stmt);
 		T VisitVarStmt(Var stmt);
+		T VisitWhileStmt(While stmt);
 	}
 
 	public abstract T Accept<T>(IVisitor<T> visitor);
@@ -32,6 +34,18 @@ internal abstract class Stmt
 		}
 	}
 
+	public class If(Expr condition, Stmt thenBranch, Stmt? elseBranch) : Stmt
+	{
+		public Expr Condition { get; } = condition;
+		public Stmt ThenBranch { get; } = thenBranch;
+		public Stmt? ElseBranch { get; } = elseBranch;
+
+		public override T Accept<T>(IVisitor<T> visitor)
+		{
+			return visitor.VisitIfStmt(this);
+		}
+	}
+
 	public class Print(Expr expres) : Stmt
 	{
 		public Expr Expres { get; } = expres;
@@ -50,6 +64,17 @@ internal abstract class Stmt
 		public override T Accept<T>(IVisitor<T> visitor)
 		{
 			return visitor.VisitVarStmt(this);
+		}
+	}
+
+	public class While(Expr condition, Stmt body) : Stmt
+	{
+		public Expr Condition { get; } = condition;
+		public Stmt Body { get; } = body;
+
+		public override T Accept<T>(IVisitor<T> visitor)
+		{
+			return visitor.VisitWhileStmt(this);
 		}
 	}
 }

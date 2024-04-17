@@ -14,6 +14,11 @@ internal class AstPrinter : Expr.IVisitor<string>
 		return Parenthesize(expr.Operator.Lexeme, expr.Left, expr.Right);
 	}
 
+	public string VisitLogicalExpr(Expr.Logical expr)
+	{
+		return Parenthesize(expr.Operator.Lexeme, expr.Left, expr.Right);
+	}
+
 	public string VisitGroupingExpr(Expr.Grouping expr)
 	{
 		return Parenthesize("group", expr.Expression);

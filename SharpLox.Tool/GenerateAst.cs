@@ -20,6 +20,7 @@ internal class GenerateAst
 			"Binary   : Expr left, Token @operator, Expr right",
 			"Grouping : Expr expression",
 			"Literal  : object? value",
+			"Logical  : Expr left, Token @operator, Expr right",
 			"Unary    : Token @operator, Expr right",
 			"Variable : Token name"
 		];
@@ -30,8 +31,10 @@ internal class GenerateAst
 		typeDefs = [
 			"Block      : List<Stmt> statements",
 			"Expression : Expr expres",
+			"If         : Expr condition, Stmt thenBranch, Stmt? elseBranch",
 			"Print      : Expr expres",
-			"Var        : Token name, Expr? initializer"
+			"Var        : Token name, Expr? initializer",
+			"While      : Expr condition, Stmt body"
 		];
 		parsedFields = ParseTypeDefs(typeDefs);
 		DefineAst(outputDir, "Stmt", parsedFields);

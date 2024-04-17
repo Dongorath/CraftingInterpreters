@@ -1,5 +1,4 @@
-﻿using static SharpLox.Expr;
-using static SharpLox.TokenType;
+﻿using static SharpLox.TokenType;
 
 namespace SharpLox;
 
@@ -18,8 +17,6 @@ internal class Parser(List<Token> tokens)
 		return statements;
 	}
 
-	// declaration    → varDecl
-	//                | statement ;
 	private Stmt? Declaration()
 	{
 		try
@@ -36,7 +33,6 @@ internal class Parser(List<Token> tokens)
 		}
 	}
 
-	// varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 	private Stmt VarDeclaration()
 	{
 		Token name = Consume(IDENTIFIER, "Expect variable name.");
@@ -51,21 +47,89 @@ internal class Parser(List<Token> tokens)
 		return new Stmt.Var(name, initializer);
 	}
 
-	// statement      → exprStmt
-	//                | printStmt ;
-	//                | block ;
 	private Stmt Statement()
 	{
+		if (Match(FOR))
+			return ForStatement();
+		if (Match(IF))
+			return IfStatement();
 		if (Match(PRINT))
 			return PrintStatement();
+		if (Match(WHILE))
+			return WhileStatement();
 		if (Match(LEFT_BRACE))
 			return new Stmt.Block(Block());
 
 		return ExpressionStatement();
 	}
 
-	// printStmt      → "print" expression ";" ;
-	// The "print" has already been consumed by Statement()
+	private Stmt ForStatement()
+	{
+		Consume(LEFT_PAREN, "Expect '(' after 'for'.");
+
+		Stmt? initializer;
+		if (Match(SEMICOLON))
+		{
+			initializer = null;
+		}
+		else if (Match(VAR))
+		{
+			initializer = VarDeclaration();
+		}
+		else
+		{
+			initializer = ExpressionStatement();
+		}
+
+		Expr? condition = null;
+		if (!Check(SEMICOLON))
+		{
+			condition = Expression();
+		}
+		Consume(SEMICOLON, "Expect ';' after loop condition.");
+
+		Expr? increment = null;
+		if (!Check(RIGHT_PAREN))
+		{
+			increment = Expression();
+		}
+		Consume(RIGHT_PAREN, "Expect ')' after for clauses.");
+
+		Stmt body = Statement();
+
+		if (increment != null)
+		{
+			body = new Stmt.Block([body, new Stmt.Expression(increment)]);
+		}
+
+		if (condition == null)
+			condition = new Expr.Literal(true);
+		body = new Stmt.While(condition, body);
+
+		if (initializer != null)
+		{
+			body = new Stmt.Block([initializer, body]);
+		}
+
+		return body;
+	}
+
+	private Stmt IfStatement()
+	{
+		Consume(LEFT_PAREN, "Expect '(' after 'if'.");
+		Expr condition = Expression();
+		Consume(RIGHT_PAREN, "Expect ')' after if condition.");
+
+		Stmt thenBranch = Statement();
+		Stmt? elseBranch = null;
+		if (Match(ELSE))
+		{
+			elseBranch = Statement();
+		}
+
+		return new Stmt.If(condition, thenBranch, elseBranch);
+	}
+
 	private Stmt PrintStatement()
 	{
 		Expr value = Expression();
@@ -73,7 +137,16 @@ internal class Parser(List<Token> tokens)
 		return new Stmt.Print(value);
 	}
 
-	// block          → "{" declaration* "}" ;
+	private Stmt WhileStatement()
+	{
+		Consume(LEFT_PAREN, "Expect '(' after 'while'.");
+		Expr condition = Expression();
+		Consume(RIGHT_PAREN, "Expect ')' after condition.");
+		Stmt body = Statement();
+
+		return new Stmt.While(condition, body);
+	}
+
 	private List<Stmt> Block()
 	{
 		List<Stmt> statements = new List<Stmt>();
@@ -87,7 +160,6 @@ internal class Parser(List<Token> tokens)
 		return statements;
 	}
 
-	// exprStmt       → expression ";" ;
 	private Stmt ExpressionStatement()
 	{
 		Expr expr = Expression();
@@ -95,7 +167,6 @@ internal class Parser(List<Token> tokens)
 		return new Stmt.Expression(expr);
 	}
 
-	// expression     → assignment ;
 	private Expr Expression()
 	{
 		return Assignment();
@@ -103,7 +174,7 @@ internal class Parser(List<Token> tokens)
 
 	private Expr Assignment()
 	{
-		Expr expr = Equality();
+		Expr expr = Or();
 
 		if (Match(EQUAL))
 		{
@@ -121,7 +192,34 @@ internal class Parser(List<Token> tokens)
 		return expr;
 	}
 
-	// equality       → comparison ( ( "!=" | "==" ) comparison )* ;
+	private Expr Or()
+	{
+		Expr expr = And();
+
+		while (Match(OR))
+		{
+			Token @operator = Previous();
+			Expr right = And();
+			expr = new Expr.Logical(expr, @operator, right);
+		}
+
+		return expr;
+	}
+
+	private Expr And()
+	{
+		Expr expr = Equality();
+
+		while (Match(AND))
+		{
+			Token @operator = Previous();
+			Expr right = Equality();
+			expr = new Expr.Logical(expr, @operator, right);
+		}
+
+		return expr;
+	}
+
 	private Expr Equality()
 	{
 		Expr expr = Comparison();
@@ -136,7 +234,6 @@ internal class Parser(List<Token> tokens)
 		return expr;
 	}
 
-	// comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 	private Expr Comparison()
 	{
 		Expr expr = Term();
@@ -151,7 +248,6 @@ internal class Parser(List<Token> tokens)
 		return expr;
 	}
 
-	// term           → factor ( ( "-" | "+" ) factor )* ;
 	private Expr Term()
 	{
 		Expr expr = Factor();
@@ -166,7 +262,6 @@ internal class Parser(List<Token> tokens)
 		return expr;
 	}
 
-	// factor         → unary ( ( "/" | "*" ) unary )* ;
 	private Expr Factor()
 	{
 		Expr expr = Unary();
@@ -181,8 +276,6 @@ internal class Parser(List<Token> tokens)
 		return expr;
 	}
 
-	// unary          → ( "!" | "-" ) unary
-	//                | primary ;
 	private Expr Unary()
 	{
 		if (Match(BANG, MINUS))
@@ -195,10 +288,6 @@ internal class Parser(List<Token> tokens)
 		return Primary();
 	}
 
-	// primary        → "true" | "false" | "nil"
-	//                | NUMBER | STRING
-	//                | "(" expression ")"
-	//                | IDENTIFIER ;
 	private Expr Primary()
 	{
 		if (Match(FALSE)) return new Expr.Literal(false);
