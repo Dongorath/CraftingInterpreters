@@ -7,7 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpLox", "SharpLox\SharpL
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestFiles", "TestFiles", "{1F501ECB-1844-4BF5-9429-32F653C3FAE1}"
 	ProjectSection(SolutionItems) = preProject
+		TestFiles\closure.lox = TestFiles\closure.lox
 		TestFiles\fib.lox = TestFiles\fib.lox
+		TestFiles\function_call.lox = TestFiles\function_call.lox
 		TestFiles\scope.lox = TestFiles\scope.lox
 		TestFiles\simple.lox = TestFiles\simple.lox
 		TestFiles\simple_tokens.lox = TestFiles\simple_tokens.lox
@@ -20,7 +22,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpLox.Tool", "SharpLox.Tool\SharpLox.Tool.csproj", "{01CDB57D-5D23-4F47-82A0-AB921E09012D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpLox.Tool", "SharpLox.Tool\SharpLox.Tool.csproj", "{01CDB57D-5D23-4F47-82A0-AB921E09012D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

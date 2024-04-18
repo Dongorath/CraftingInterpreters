@@ -59,4 +59,9 @@ internal class AstPrinter : Expr.IVisitor<string>
 
 		return builder.ToString();
 	}
+
+	public string VisitCallExpr(Expr.Call expr)
+	{
+		return Parenthesize("call", [expr.Callee, .. expr.Arguments]);
+	}
 }

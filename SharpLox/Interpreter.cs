@@ -1,11 +1,19 @@
 ﻿using System;
+using static SharpLox.Stmt;
 using static SharpLox.TokenType;
 
 namespace SharpLox;
 
 internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 {
-	private Environment Environment { get; set; } = new Environment();
+	public Environment Globals { get; } = new Environment();
+	private Environment Environment { get; set; }
+
+	public Interpreter()
+	{
+		Environment = Globals;
+		Globals.Define("clock", new NativeFunctions.Clock());
+	}
 
 	public void Interpret(List<Stmt> statements)
 	{
@@ -27,7 +35,7 @@ internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 		stmt.Accept(this);
 	}
 
-	private void ExecuteBlock(List<Stmt> statements,Environment environment)
+	public void ExecuteBlock(List<Stmt> statements,Environment environment)
 	{
 		Environment previous = Environment;
 		try
@@ -153,6 +161,28 @@ internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 		return null;
 	}
 
+	public object? VisitCallExpr(Expr.Call expr)
+	{
+		object? callee = Evaluate(expr.Callee);
+
+		List<object?> arguments = new List<object?>();
+		foreach (Expr argument in expr.Arguments)
+		{
+			arguments.Add(Evaluate(argument));
+		}
+
+		if (callee is not ILoxCallable function)
+		{
+			throw new RuntimeErrorException(expr.Paren, "Can only call functions and classes.");
+		}
+		if (arguments.Count != function.Arity)
+		{
+			throw new RuntimeErrorException(expr.Paren, $"Expected {function.Arity} arguments but got {arguments.Count}.");
+		}
+
+		return function.Call(this, arguments);
+	}
+
 	private static bool IsTruthy(object? @object)
 	{
 		if (@object is null) return false;
@@ -192,6 +222,13 @@ internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 		return null;
 	}
 
+	public object? VisitFunctionStmt(Stmt.Function stmt)
+	{
+		LoxFunction function = new LoxFunction(stmt, Environment);
+		Environment.Define(stmt.Name.Lexeme, function);
+		return null;
+	}
+
 	public object? VisitIfStmt(Stmt.If stmt)
 	{
 		if (IsTruthy(Evaluate(stmt.Condition)))
@@ -210,6 +247,15 @@ internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 		object? value = Evaluate(stmt.Expres);
 		Console.WriteLine(Stringify(value));
 		return null;
+	}
+
+	public object? VisitReturnStmt(Stmt.Return stmt)
+	{
+		object? value = null;
+		if (stmt.Value != null)
+			value = Evaluate(stmt.Value);
+
+		throw new ReturnException(value);
 	}
 
 	public object? VisitWhileStmt(Stmt.While stmt)

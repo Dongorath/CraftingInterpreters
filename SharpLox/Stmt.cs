@@ -6,8 +6,10 @@ internal abstract class Stmt
 	{
 		T VisitBlockStmt(Block stmt);
 		T VisitExpressionStmt(Expression stmt);
+		T VisitFunctionStmt(Function stmt);
 		T VisitIfStmt(If stmt);
 		T VisitPrintStmt(Print stmt);
+		T VisitReturnStmt(Return stmt);
 		T VisitVarStmt(Var stmt);
 		T VisitWhileStmt(While stmt);
 	}
@@ -34,6 +36,18 @@ internal abstract class Stmt
 		}
 	}
 
+	public class Function(Token name, List<Token> @params, List<Stmt> body) : Stmt
+	{
+		public Token Name { get; } = name;
+		public List<Token> Params { get; } = @params;
+		public List<Stmt> Body { get; } = body;
+
+		public override T Accept<T>(IVisitor<T> visitor)
+		{
+			return visitor.VisitFunctionStmt(this);
+		}
+	}
+
 	public class If(Expr condition, Stmt thenBranch, Stmt? elseBranch) : Stmt
 	{
 		public Expr Condition { get; } = condition;
@@ -53,6 +67,17 @@ internal abstract class Stmt
 		public override T Accept<T>(IVisitor<T> visitor)
 		{
 			return visitor.VisitPrintStmt(this);
+		}
+	}
+
+	public class Return(Token keyword, Expr? value) : Stmt
+	{
+		public Token Keyword { get; } = keyword;
+		public Expr? Value { get; } = value;
+
+		public override T Accept<T>(IVisitor<T> visitor)
+		{
+			return visitor.VisitReturnStmt(this);
 		}
 	}
 
