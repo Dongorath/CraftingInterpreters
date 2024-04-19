@@ -59,7 +59,15 @@ internal class Lox
 		// Stop if there was a syntax error.
 		if (HadError)
 			return;
+
+		Resolver resolver = new Resolver(Interpreter);
 		// statements cannot be null
+		resolver.Resolve(statements!);
+
+		// Stop if there was a resolution error.
+		if (HadError)
+			return;
+
 		Interpreter.Interpret(statements!);
 	}
 

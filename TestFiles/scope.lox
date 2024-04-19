@@ -18,8 +18,3 @@ print a;
 print b;
 print c;
 
-var z = 1;
-{
-    var z = z + 2;
-    print z;
-}

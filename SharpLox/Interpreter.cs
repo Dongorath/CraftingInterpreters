@@ -7,6 +7,7 @@ namespace SharpLox;
 internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 {
 	public Environment Globals { get; } = new Environment();
+	private Dictionary<Expr, int> Locals { get; } = new Dictionary<Expr, int>();
 	private Environment Environment { get; set; }
 
 	public Interpreter()
@@ -33,6 +34,11 @@ internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 	private void Execute(Stmt stmt)
 	{
 		stmt.Accept(this);
+	}
+
+	public void Resolve(Expr expr, int depth)
+	{
+		Locals[expr] = depth;
 	}
 
 	public void ExecuteBlock(List<Stmt> statements,Environment environment)
@@ -107,13 +113,32 @@ internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 
 	public object? VisitVariableExpr(Expr.Variable expr)
 	{
-		return Environment.Get(expr.Name);
+		return LookUpVariable(expr.Name, expr);
+	}
+
+	private object? LookUpVariable(Token name, Expr expr)
+	{
+		if (Locals.TryGetValue(expr, out int distance))
+		{
+			return Environment.GetAt(distance, name.Lexeme);
+		}
+		else
+		{
+			return Globals.Get(name);
+		}
 	}
 
 	public object? VisitAssignExpr(Expr.Assign expr)
 	{
 		object? value = Evaluate(expr.Value);
-		Environment.Assign(expr.Name, value);
+		if (Locals.TryGetValue(expr, out int distance))
+		{
+			Environment.AssignAt(distance, expr.Name, value);
+		}
+		else
+		{
+			Globals.Assign(expr.Name, value);
+		}
 		return value;
 	}
 
