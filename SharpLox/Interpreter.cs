@@ -1,6 +1,4 @@
-﻿using System;
-using static SharpLox.Stmt;
-using static SharpLox.TokenType;
+﻿using static SharpLox.TokenType;
 
 namespace SharpLox;
 
@@ -85,6 +83,25 @@ internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 		}
 
 		return Evaluate(expr.Right);
+	}
+
+	public object? VisitSetExpr(Expr.Set expr)
+	{
+		object? @object = Evaluate(expr.Object);
+
+		if (@object is not LoxInstance inst)
+		{
+			throw new RuntimeErrorException(expr.Name, "Only instances have fields.");
+		}
+
+		object? value = Evaluate(expr.Value);
+		inst.Set(expr.Name, value);
+		return value;
+	}
+
+	public object? VisitThisExpr(Expr.This expr)
+	{
+		return LookUpVariable(expr.Keyword, expr);
 	}
 
 	public object? VisitGroupingExpr(Expr.Grouping expr)
@@ -208,6 +225,17 @@ internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 		return function.Call(this, arguments);
 	}
 
+	public object? VisitGetExpr(Expr.Get expr)
+	{
+		object? @object = Evaluate(expr.Object);
+		if (@object is LoxInstance inst)
+		{
+			return inst.Get(expr.Name);
+		}
+
+		throw new RuntimeErrorException(expr.Name, "Only instances have properties.");
+	}
+
 	private static bool IsTruthy(object? @object)
 	{
 		if (@object is null) return false;
@@ -249,7 +277,7 @@ internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 
 	public object? VisitFunctionStmt(Stmt.Function stmt)
 	{
-		LoxFunction function = new LoxFunction(stmt, Environment);
+		LoxFunction function = new LoxFunction(stmt, Environment, false);
 		Environment.Define(stmt.Name.Lexeme, function);
 		return null;
 	}
@@ -295,6 +323,22 @@ internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 	public object? VisitBlockStmt(Stmt.Block stmt)
 	{
 		ExecuteBlock(stmt.Statements, new Environment(Environment));
+		return null;
+	}
+
+	public object? VisitClassStmt(Stmt.Class stmt)
+	{
+		Environment.Define(stmt.Name.Lexeme, null);
+
+		Dictionary<string, LoxFunction> methods = [];
+		foreach (Stmt.Function method in stmt.Methods)
+		{
+			LoxFunction function = new LoxFunction(method, Environment, method.Name.Lexeme == "init");
+			methods[method.Name.Lexeme] = function;
+		}
+
+		LoxClass klass = new LoxClass(stmt.Name.Lexeme, methods);
+		Environment.Assign(stmt.Name, klass);
 		return null;
 	}
 

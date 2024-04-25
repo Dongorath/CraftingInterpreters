@@ -1,9 +1,10 @@
 ﻿namespace SharpLox;
 
-internal class LoxFunction(Stmt.Function declaration, Environment closure) : ILoxCallable
+internal class LoxFunction(Stmt.Function declaration, Environment closure, bool isInitializer) : ILoxCallable
 {
 	private Stmt.Function Declaration { get; } = declaration;
 	private Environment Closure { get; } = closure;
+	private bool IsInitializer { get; } = isInitializer;
 
 	public int Arity => Declaration.Params.Count;
 
@@ -21,9 +22,21 @@ internal class LoxFunction(Stmt.Function declaration, Environment closure) : ILo
 		}
 		catch (ReturnException retVal)
 		{
+			if (IsInitializer)
+				return Closure.GetAt(0, "this");
 			return retVal.Value;
 		}
+
+		if (IsInitializer)
+			return Closure.GetAt(0, "this");
 		return null;
+	}
+
+	public LoxFunction Bind(LoxInstance instance)
+	{
+		Environment environment = new Environment(Closure);
+		environment.Define("this", instance);
+		return new LoxFunction(Declaration, environment, IsInitializer);
 	}
 
 	public override string ToString()

@@ -7,12 +7,21 @@ internal class Resolver(Interpreter interpreter) : Expr.IVisitor<object?>, Stmt.
 	private enum FunctionType
 	{
 		NONE,
-		FUNCTION
+		FUNCTION,
+		INITIALIZER,
+		METHOD
+	}
+
+	private enum ClassType
+	{
+		NONE,
+		CLASS
 	}
 
 	private Interpreter Interpreter { get; } = interpreter;
 	private Stack<Dictionary<string, bool>> Scopes { get; } = [];
 	private FunctionType CurrentFunction { get; set; } = FunctionType.NONE;
+	private ClassType CurrentClass { get; set; } = ClassType.NONE;
 
 	public void Resolve(List<Stmt> statements)
 	{
@@ -102,6 +111,33 @@ internal class Resolver(Interpreter interpreter) : Expr.IVisitor<object?>, Stmt.
 		return null;
 	}
 
+	public object? VisitClassStmt(Stmt.Class stmt)
+	{
+		ClassType enclosingClass = CurrentClass;
+		CurrentClass = ClassType.CLASS;
+
+		Declare(stmt.Name);
+		Define(stmt.Name);
+
+		BeginScope();
+		Scopes.Peek()["this"] = true;
+
+		foreach (Stmt.Function method in stmt.Methods)
+		{
+			FunctionType declaration = FunctionType.METHOD;
+			if (method.Name.Lexeme == "init")
+				declaration = FunctionType.INITIALIZER;
+
+			ResolveFunction(method, declaration);
+		}
+
+		EndScope();
+
+		CurrentClass = enclosingClass;
+
+		return null;
+	}
+
 	public object? VisitExpressionStmt(Stmt.Expression stmt)
 	{
 		Resolve(stmt.Expres);
@@ -140,7 +176,13 @@ internal class Resolver(Interpreter interpreter) : Expr.IVisitor<object?>, Stmt.
 		}
 
 		if (stmt.Value != null)
+		{
+			if (CurrentFunction == FunctionType.INITIALIZER)
+			{
+				Lox.Error(stmt.Keyword, "Can't return a value from an initializer.");
+			}
 			Resolve(stmt.Value);
+		}
 
 		return null;
 	}
@@ -189,6 +231,12 @@ internal class Resolver(Interpreter interpreter) : Expr.IVisitor<object?>, Stmt.
 		return null;
 	}
 
+	public object? VisitGetExpr(Expr.Get expr)
+	{
+		Resolve(expr.Object);
+		return null;
+	}
+
 	public object? VisitGroupingExpr(Expr.Grouping expr)
 	{
 		Resolve(expr.Expression);
@@ -206,6 +254,26 @@ internal class Resolver(Interpreter interpreter) : Expr.IVisitor<object?>, Stmt.
 		Resolve(expr.Right);
 		return null;
 	}
+
+	public object? VisitSetExpr(Expr.Set expr)
+	{
+		Resolve(expr.Value);
+		Resolve(expr.Object);
+		return null;
+	}
+
+	public object? VisitThisExpr(Expr.This expr)
+	{
+		if (CurrentClass == ClassType.NONE)
+		{
+			Lox.Error(expr.Keyword, "Can't use 'this' outside of a class.");
+			return null;
+		}
+
+		ResolveLocal(expr, expr.Keyword);
+		return null;
+	}
+
 
 	public object? VisitUnaryExpr(Expr.Unary expr)
 	{

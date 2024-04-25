@@ -21,6 +21,8 @@ internal class Parser(List<Token> tokens)
 	{
 		try
 		{
+			if (Match(CLASS))
+				return ClassDeclaration();
 			if (Match(FUN))
 				return Function("function");
 			if (Match(VAR))
@@ -33,6 +35,22 @@ internal class Parser(List<Token> tokens)
 			Synchronize();
 			return null;
 		}
+	}
+
+	private Stmt ClassDeclaration()
+	{
+		Token name = Consume(IDENTIFIER, "Expect class name.");
+		Consume(LEFT_BRACE, "Expect '{' before class body.");
+
+		List<Stmt.Function> methods = [];
+		while (!Check(RIGHT_BRACE) && !IsAtEnd())
+		{
+			methods.Add(Function("method"));
+		}
+
+		Consume(RIGHT_BRACE, "Expect '}' after class body.");
+
+		return new Stmt.Class(name, methods);
 	}
 
 	private Stmt.Function Function(String kind)
@@ -222,9 +240,14 @@ internal class Parser(List<Token> tokens)
 			Token equals = Previous();
 			Expr value = Assignment();
 
-			if (expr is Expr.Variable varia) {
+			if (expr is Expr.Variable varia)
+			{
 				Token name = varia.Name;
 				return new Expr.Assign(name, value);
+			}
+			else if (expr is Expr.Get get)
+			{
+				return new Expr.Set(get.Object, get.Name, value);
 			}
 
 			Error(equals, "Invalid assignment target.");
@@ -339,6 +362,11 @@ internal class Parser(List<Token> tokens)
 			{
 				expr = FinishCall(expr);
 			}
+			else if (Match(DOT))
+			{
+				Token name = Consume(IDENTIFIER, "Expect property name after '.'.");
+				expr = new Expr.Get(expr, name);
+			}
 			else
 			{
 				break;
@@ -356,34 +384,33 @@ internal class Parser(List<Token> tokens)
 			do
 			{
 				if (arguments.Count >= 255)
-				{
 					Error(Peek(), "Can't have more than 255 arguments.");
-				}
 				arguments.Add(Expression());
 			} while (Match(COMMA));
 		}
 
-		Token paren = Consume(RIGHT_PAREN,
-							  "Expect ')' after arguments.");
+		Token paren = Consume(RIGHT_PAREN, "Expect ')' after arguments.");
 
 		return new Expr.Call(callee, paren, arguments);
 	}
 
 	private Expr Primary()
 	{
-		if (Match(FALSE)) return new Expr.Literal(false);
-		if (Match(TRUE)) return new Expr.Literal(true);
-		if (Match(NIL)) return new Expr.Literal(null);
+		if (Match(FALSE))
+			return new Expr.Literal(false);
+		if (Match(TRUE))
+			return new Expr.Literal(true);
+		if (Match(NIL))
+			return new Expr.Literal(null);
 
 		if (Match(NUMBER, STRING))
-		{
 			return new Expr.Literal(Previous().Literal);
-		}
+
+		if (Match(THIS))
+			return new Expr.This(Previous());
 
 		if (Match(IDENTIFIER))
-		{
 			return new Expr.Variable(Previous());
-		}
 
 		if (Match(LEFT_PAREN))
 		{

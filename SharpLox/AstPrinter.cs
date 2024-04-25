@@ -64,4 +64,19 @@ internal class AstPrinter : Expr.IVisitor<string>
 	{
 		return Parenthesize("call", [expr.Callee, .. expr.Arguments]);
 	}
+
+	public string VisitGetExpr(Expr.Get expr)
+	{
+		return Parenthesize("get " + expr.Name.Lexeme, [expr.Object]);
+	}
+
+	public string VisitSetExpr(Expr.Set expr)
+	{
+		return Parenthesize("set " + expr.Name.Lexeme, [expr.Object, expr.Value]);
+	}
+
+	public string VisitThisExpr(Expr.This expr)
+	{
+		return "this";
+	}
 }
