@@ -79,4 +79,9 @@ internal class AstPrinter : Expr.IVisitor<string>
 	{
 		return "this";
 	}
+
+	public string VisitSuperExpr(Expr.Super expr)
+	{
+		return "super";
+	}
 }

@@ -1,4 +1,5 @@
-﻿using static SharpLox.TokenType;
+﻿using System;
+using static SharpLox.TokenType;
 
 namespace SharpLox;
 
@@ -97,6 +98,23 @@ internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 		object? value = Evaluate(expr.Value);
 		inst.Set(expr.Name, value);
 		return value;
+	}
+
+	public object? VisitSuperExpr(Expr.Super expr)
+	{
+		int distance = Locals[expr];
+		LoxClass superclass = (LoxClass)Environment.GetAt(distance, "super")!;
+
+		LoxInstance @object = (LoxInstance)Environment.GetAt(distance - 1, "this")!;
+
+		LoxFunction? method = superclass.FindMethod(expr.Method.Lexeme);
+
+		if (method == null)
+		{
+			throw new RuntimeErrorException(expr.Method, $"Undefined property '{expr.Method.Lexeme}'.");
+		}
+
+		return method.Bind(@object);
 	}
 
 	public object? VisitThisExpr(Expr.This expr)
@@ -328,7 +346,24 @@ internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 
 	public object? VisitClassStmt(Stmt.Class stmt)
 	{
+		object? superclass = null;
+		if (stmt.Superclass != null)
+		{
+			superclass = Evaluate(stmt.Superclass);
+			if (superclass is not LoxClass)
+			{
+				throw new RuntimeErrorException(stmt.Superclass.Name,
+					"Superclass must be a class.");
+			}
+		}
+
 		Environment.Define(stmt.Name.Lexeme, null);
+
+		if (stmt.Superclass != null)
+		{
+			Environment = new Environment(Environment);
+			Environment.Define("super", superclass);
+		}
 
 		Dictionary<string, LoxFunction> methods = [];
 		foreach (Stmt.Function method in stmt.Methods)
@@ -337,7 +372,13 @@ internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 			methods[method.Name.Lexeme] = function;
 		}
 
-		LoxClass klass = new LoxClass(stmt.Name.Lexeme, methods);
+		LoxClass klass = new LoxClass(stmt.Name.Lexeme, (LoxClass?)superclass, methods);
+
+		if (superclass != null)
+		{
+			Environment = Environment.Enclosing!;
+		}
+
 		Environment.Assign(stmt.Name, klass);
 		return null;
 	}

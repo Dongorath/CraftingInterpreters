@@ -27,9 +27,10 @@ internal abstract class Stmt
 		}
 	}
 
-	public class Class(Token name, List<Stmt.Function> methods) : Stmt
+	public class Class(Token name, Expr.Variable? superclass, List<Stmt.Function> methods) : Stmt
 	{
 		public Token Name { get; } = name;
+		public Expr.Variable? Superclass { get; } = superclass;
 		public List<Stmt.Function> Methods { get; } = methods;
 
 		public override T Accept<T>(IVisitor<T> visitor)

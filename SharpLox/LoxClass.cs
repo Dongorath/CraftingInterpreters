@@ -1,7 +1,8 @@
 ﻿namespace SharpLox;
 
-internal class LoxClass(string name, Dictionary<string, LoxFunction> methods) : ILoxCallable
+internal class LoxClass(string name, LoxClass? superclass, Dictionary<string, LoxFunction> methods) : ILoxCallable
 {
+	public LoxClass? Superclass { get; } = superclass;
 	public string Name { get; } = name;
 	private Dictionary<string, LoxFunction> Methods { get; } = methods;
 
@@ -19,6 +20,11 @@ internal class LoxClass(string name, Dictionary<string, LoxFunction> methods) : 
 		if (Methods.TryGetValue(name, out LoxFunction? method))
 		{
 			return method;
+		}
+
+		if (Superclass != null)
+		{
+			return Superclass.FindMethod(name);
 		}
 
 		return null;
