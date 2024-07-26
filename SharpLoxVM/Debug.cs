@@ -30,6 +30,16 @@ internal static class Debug
 		{
 			case OpCode.OP_CONSTANT:
 				return ConstantInstruction("OP_CONSTANT", chunk, offset);
+			case OpCode.OP_ADD:
+				return SimpleInstruction("OP_ADD", offset);
+			case OpCode.OP_SUBTRACT:
+				return SimpleInstruction("OP_SUBTRACT", offset);
+			case OpCode.OP_MULTIPLY:
+				return SimpleInstruction("OP_MULTIPLY", offset);
+			case OpCode.OP_DIVIDE:
+				return SimpleInstruction("OP_DIVIDE", offset);
+			case OpCode.OP_NEGATE:
+				return SimpleInstruction("OP_NEGATE", offset);
 			case OpCode.OP_RETURN:
 				return SimpleInstruction("OP_RETURN", offset);
 			default:

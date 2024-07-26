@@ -7,4 +7,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);DEBUG_TRACE_EXECUTION</DefineConstants>
+  </PropertyGroup>
+
 </Project>
